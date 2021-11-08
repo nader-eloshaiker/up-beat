@@ -1,8 +1,20 @@
-
-
+#include <SPI.h>
 #include <Wire.h>
-#include "MAX30105.h"
 
+
+// OLED Config
+#include <Adafruit_SH110X.h>
+#include <Adafruit_GFX.h>
+
+#define i2c_Address 0x3c
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 128 // OLED display height, in pixels
+#define OLED_RESET -1   //   QT-PY / XIAO
+Adafruit_SH1107 display = Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+
+// Sensor Config
+#include "MAX30105.h"
 #include "heartRate.h"
 
 MAX30105 particleSensor;
@@ -18,6 +30,14 @@ int beatAvg;
 void setup()
 {
   Serial.begin(115200);
+
+  display.begin(i2c_Address, true);
+  display.display();
+  delay(2000);
+  display.clearDisplay();
+  display.display();
+
+  
   Serial.println("UpBeat...");
 
   // Initialize sensor
@@ -58,15 +78,29 @@ void loop()
     }
   }
 
-  Serial.print("IR=");
-  Serial.print(irValue);
-  Serial.print(", BPM=");
-  Serial.print(beatsPerMinute);
-  Serial.print(", Avg BPM=");
-  Serial.print(beatAvg);
 
-  if (irValue < 50000)
+  if (irValue < 50000) {
     Serial.print(" No finger?");
+    //obdFill(&obd, 0, 0);
+    //obdWriteStringCustom(&obd, (GFXfont *)&FreeSerif12pt7b, 0, 16, (char *)"No Finger?",1);
+    //obdDumpBuffer(&obd, NULL);
+    display.clearDisplay();
+    display.setTextSize(2);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(0, 0);
+    display.println("No Finger?");
+    display.display();
+  } else {
+    display.clearDisplay();
+    display.display();
+    Serial.print("IR=");
+    Serial.print(irValue);
+    Serial.print(", BPM=");
+    Serial.print(beatsPerMinute,1);
+    Serial.print(", Avg BPM=");
+    Serial.print(beatAvg);
+
+   }
 
   Serial.println();
 }
